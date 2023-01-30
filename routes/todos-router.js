@@ -43,8 +43,7 @@ router.get("/todos/:uuid", async (req, res) => {
     }
     return res.json(todo);
   } catch (error) {
-    console.log(err);
-    return res.status(500).json({ error: "something went wrong" });
+    res.status(500).send(error);
   }
 });
 
