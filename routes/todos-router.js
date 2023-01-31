@@ -14,7 +14,7 @@ router.get("/todos", async (req, res) => {
   }
 });
 
-//create a task
+// create a task
 
 router.post("/", async (req, res) => {
   try {
@@ -26,7 +26,7 @@ router.post("/", async (req, res) => {
     todo.id = uuid.v4();
     const isTodoSaved = await todos.create(todo);
     if (isTodoSaved) {
-      res.status(200).send({ message: "Todo saved", data: todo });
+      res.status(200).send({ message: "Task saved", data: todo });
     }
   } catch (error) {
     res.status(500).send(error);
@@ -34,12 +34,12 @@ router.post("/", async (req, res) => {
 });
 
 // get by id
-router.get("/todos/:uuid", async (req, res) => {
-  const uuid = req.params.uuid;
+router.get("/todos/:id", async (req, res) => {
+  const id = req.params.id;
   try {
     const todo = await todo.findOne();
     where: {
-      uuid;
+      id;
     }
     return res.json(todo);
   } catch (error) {
@@ -47,26 +47,26 @@ router.get("/todos/:uuid", async (req, res) => {
   }
 });
 
-//update
+// update
 
-router.put("/todos/:uuid", async (req, res) => {
+router.put("/todos/:id", async (req, res) => {
   try {
-    if (!req.body.uuid) {
+    if (!req.body.id) {
       return res.status(400).send({ message: "ID is required" });
     }
-    const { uuid, name } = req.body;
-    await todos.update({ uuid, name }, { where: { uuid } });
-    res.status(200).send({ message: "task updated", data: { uuid, name } });
+    const { id, name } = req.body;
+    await todos.update({ id, name }, { where: {id } });
+    res.status(200).send({ message: "task updated", data: { id, name } });
   } catch (error) {
     res.status(500).send(error);
   }
 });
 
 // delete task
-router.delete("/todos/:uuid", async (req, res) => {
+router.delete("/todos/:id", async (req, res) => {
   try {
-    const uuid = req.params.uuid;
-    await todos.destroy({ where: { uuid } });
+    const id = req.params.id;
+    await todos.destroy({ where: { id } });
     res.status(200).send({ message: "task deleted" });
   } catch (error) {
     res.status(500).send(error);

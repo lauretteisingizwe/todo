@@ -7,14 +7,9 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('todos', {
       id: {
-        allowNull: false,
-        autoIncrement: true,
+        type: sequelize.UUID,
+        defaultValue: sequelize.UUIDV4,
         primaryKey: true,
-        type: DataTypes.INTEGER
-      },
-      uuid: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
   
        },
       text: {

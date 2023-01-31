@@ -18,17 +18,12 @@ module.exports = (sequelize, DataTypes) => {
     
   }
   Todos.init({
-    uuid: {
+    id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
 
      },
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      unique: true,
-      allowNull: false,
-    },
     name: {
       type: DataTypes.TEXT,
       allowNull: false,

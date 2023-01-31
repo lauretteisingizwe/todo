@@ -20,7 +20,7 @@ app.all("*", (req, res) => {
 })
 
 db.sequelize
-  .sync({alter: true })
+  .sync({ alter: true})
   .then(() => {
     app.listen(5000, () => {
       console.log("App is runnig on port http://localhost:5000");
