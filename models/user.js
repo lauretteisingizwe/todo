@@ -2,9 +2,8 @@
 const {
   Model
 } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
-  class Todos extends Model {
+  class user extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -13,29 +12,30 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
     }
-    
-    
   }
-  Todos.init({
-    id: {
+  user.init({
+    userid: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
 
      },
-    name: {
-      type: DataTypes.TEXT,
+     name: {
+      type: DataTypes.STRING,
       allowNull: false,
-      // validate: {
-      //   notNull: { msg: 'task must have a name' },
-      //   notEmpty: { msg: 'name can not be empty'}
+     },
+     email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+     },
+     password: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+     }
 
-      // }
-    },
   }, {
     sequelize,
-    tableName: 'todos',
-    modelName: 'Todos',
+    modelName: 'user',
   });
-  return Todos;
+  return user;
 };

@@ -10,8 +10,6 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
 
-const { sequelize, todos } = require("./models");
-const { Sequelize, where } = require("sequelize");
 const db = require("./models");
 
 app.use("/api/todos", require("./routes/todos-router"));

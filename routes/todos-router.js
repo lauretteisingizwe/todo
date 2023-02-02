@@ -1,75 +1,120 @@
 const express = require("express");
-const { update } = require("tar");
+const { required } = require("joi");
 const router = express.Router();
-const uuid = require("uuid");
+const joi = require("joi");
+
+const db = require("../models");
 
 // get all tasks
 
-router.get("/todos", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const todos = await todos.findAll();
-    res.status(200).send({ data: allTodos });
+    const data = await db.Todos.findAll();
+    res.status(200).send({ data });
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });
 
 // create a task
 
-router.post("/", async (req, res) => {
-  try {
+router.post(  "/",  async (req, res) => {
+    const data = req.body;
+           const schema = joi.object({
+            name: joi.string()
+              .min(3)
+              .max(30)
+              .required(),
+        })
 
-    if (!req.body.name) {
-      return res.status(400).send({ message: "name is a required" });
+        const { error, value } = schema.validate({ name: name });
+
+        if (error)
+        return res.status(400).send({ message: "Please fill in the name" , error});
+    try {
+      console.log(req.body);
+      const addTodos = await db.Todos.create({name: data.name,});  
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+      console.log(error);
     }
-    const todo = req.body;
-    todo.id = uuid.v4();
-    const isTodoSaved = await todos.create(todo);
-    if (isTodoSaved) {
-      res.status(200).send({ message: "Task saved", data: todo });
-    }
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+  },
 
-// get by id
-router.get("/todos/:id", async (req, res) => {
-  const id = req.params.id;
-  try {
-    const todo = await todo.findOne();
-    where: {
-      id;
-    }
-    return res.json(todo);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+  // update
 
-// update
+  router.put("/:id",async (req, res) => {
+      try {
+        const id = req.params.id;
+        const { name } = req.body;
 
-router.put("/todos/:id", async (req, res) => {
-  try {
-    if (!req.body.id) {
-      return res.status(400).send({ message: "ID is required" });
-    }
-    const { id, name } = req.body;
-    await todos.update({ id, name }, { where: {id } });
-    res.status(200).send({ message: "task updated", data: { id, name } });
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+        //validation
+        if (!name)
+          return res.status(400).send({ message: "Please fill in the name" });
+        if (name.length < 3)
+          return res.status(400).send({ message: "name should be min 3 letters" });
 
-// delete task
-router.delete("/todos/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    await todos.destroy({ where: { id } });
-    res.status(200).send({ message: "task deleted" });
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
-module.exports = router;
+          //using joi validator
+
+        //   const schema = joi.object({
+        //     name: joi.string()
+        //       .min(3)
+        //       .max(30)
+        //       .required(),
+        // })
+
+        // const { error, value } = schema.validate({ name: name });
+
+        // if (error)
+        // return res.status(400).send({ message: "Please fill in the name" , error});
+
+        const data = await db.Todos.findByPk(id);
+        data.name = name;
+        await data.save();
+
+        if (data) {
+          return res
+            .status(200)
+            .send({ message: "task updated", data: { id, name } });
+        }
+      } catch (error) {
+        console.log(error);
+
+        res.status(500).send(error);
+      }
+    },
+    // }),
+
+    //get by id
+    router.get("/:id", async (req, res) => {
+      const id = req.params.id;
+
+      try {
+        const data = await db.Todos.findByPk(id);
+        if (data) {
+          return res.json(data);
+        }
+        return res.status(200).send({ message: "this task doesn't exist" });
+      } catch (error) {
+        res.status(500).send(error);
+      }
+    }),
+
+    // delete task
+    router.delete("/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const todo = await db.Todos.destroy({ where: { id } });
+
+        if (todo) {
+          return res.status(200).send({ message: "task deleted" });
+        }
+        return res.status(200).send({ message: "task doesn't exist" });
+      } catch (error) {
+        res.status(500).send(error);
+      }
+    }),
+    (module.exports = router)
+  )
+);
