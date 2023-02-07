@@ -20,7 +20,9 @@ router.get("/", async (req, res) => {
 // create a task
 
 router.post(  "/",  async (req, res) => {
-    const data = req.body;
+
+    try {
+          const {name }= req.body;
            const schema = joi.object({
             name: joi.string()
               .min(3)
@@ -28,13 +30,13 @@ router.post(  "/",  async (req, res) => {
               .required(),
         })
 
-        const { error, value } = schema.validate({ name: name });
+        const { error, value } = schema.validate({ name: name});
 
         if (error)
         return res.status(400).send({ message: "Please fill in the name" , error});
-    try {
       console.log(req.body);
-      const addTodos = await db.Todos.create({name: data.name,});  
+      const addTodos = await db.Todos.create({name: name,}); 
+      return res.status(200).send({message:"task created", data: addTodos}); 
     } catch (error) {
       console.log(error);
       res.status(500).send(error);
@@ -49,34 +51,32 @@ router.post(  "/",  async (req, res) => {
         const id = req.params.id;
         const { name } = req.body;
 
-        //validation
-        if (!name)
-          return res.status(400).send({ message: "Please fill in the name" });
-        if (name.length < 3)
-          return res.status(400).send({ message: "name should be min 3 letters" });
+  
 
-          //using joi validator
+          const schema = joi.object({
+            name: joi.string()
+              .min(3)
+              .max(30)
+              .required(),
+        })
 
-        //   const schema = joi.object({
-        //     name: joi.string()
-        //       .min(3)
-        //       .max(30)
-        //       .required(),
-        // })
+        const { error, value } = schema.validate({ name: name });
 
-        // const { error, value } = schema.validate({ name: name });
-
-        // if (error)
-        // return res.status(400).send({ message: "Please fill in the name" , error});
+        if (error)
+        return res.status(400).send({ message: "Please fill in the name" , error});
 
         const data = await db.Todos.findByPk(id);
+        if(!data)
+        return res.status(404).send({message: "task doesn't exist"});
         data.name = name;
         await data.save();
+        const todo = await data.save();
 
         if (data) {
           return res
             .status(200)
-            .send({ message: "task updated", data: { id, name } });
+            .send({ message: "task updated", data: todo});
+        
         }
       } catch (error) {
         console.log(error);
