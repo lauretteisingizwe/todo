@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 const db = require("./models");
 
 app.use("/api/todos", require("./routes/todos-router"));
-app.use("/api/user", require("./routes/user-router"));
+app.use("/api/users", require("./routes/users-router"));
 app.all("*", (req, res) => {
   res.status(404).send({ message: "Route not found" });
 })
