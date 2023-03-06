@@ -2,14 +2,23 @@ const express = require("express");
 const { required } = require("joi");
 const router = express.Router();
 const joi = require("joi");
+const { validateToken } = require("../Authmiddleware");
 
 const db = require("../models");
 
 // get all tasks
 
-router.get("/", async (req, res) => {
+router.get("/", validateToken, async (req, res) => {
   try {
-    const data = await db.Todos.findAll();
+    const data = await db.Todos.findAll({
+      where: { userId: req.userId },
+      include: [
+        {
+          model: db.User,
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
     res.status(200).send({ data });
   } catch (error) {
     console.log(error);
@@ -18,77 +27,85 @@ router.get("/", async (req, res) => {
 });
 
 //get by id
-router.get("/:id", async (req, res) => {
+router.get("/:id", validateToken, async (req, res) => {
   const id = req.params.id;
-
+  const { userId } = req; // const userId = req.userId
   try {
     const data = await db.Todos.findByPk(id);
-    if (data) {
-      return res.json(data);
+
+    if (!data) {
+      return res.status(404).send({ message: "this task doesn't exist" });
     }
-    return res.status(200).send({ message: "this task doesn't exist" });
+
+    if (data.userId !== userId) {
+      return res.status(403).send({ message: "task does not belong to you" });
+    }
+
+    return res.json(data);
   } catch (error) {
     res.status(500).send(error);
   }
 });
 
 // delete task
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", validateToken, async (req, res) => {
   try {
     const id = req.params.id;
+    const { userId } = req;
     const todo = await db.Todos.destroy({ where: { id } });
 
-    if (todo) {
-      return res.status(200).send({ message: "task deleted" });
+    if (!todo) {
+      return res.status(400).send({ message: "this task does not exist" });
     }
-    return res.status(200).send({ message: "task doesn't exist" });
+    if (todo.userId !== userId) {
+      return res.status(403).send({ message: "task does not belong to you" });
+    }
   } catch (error) {
     res.status(500).send(error);
   }
 });
 
-
 // update
-router.put(
-  "/:id",
-  async (req, res) => {
-    try {
-      const id = req.params.id;
-      const { name } = req.body;
+router.put("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const { name } = req.body;
+    const { userId } = req;
 
-      const schema = joi.object({
-        name: joi.string().min(3).max(30).required(),
-      });
+    const schema = joi.object({
+      name: joi.string().min(3).max(30).required(),
+    });
 
-      const { error, value } = schema.validate({ name: name });
+    const { error, value } = schema.validate({ name: name });
 
-      if (error)
-        return res
-          .status(400)
-          .send({ message: "Please fill in the name", error });
+    if (!error)
+      return res
+        .status(400)
+        .send({ message: "Please fill in the name", error });
 
-      const data = await db.Todos.findByPk(id);
-      if (!data) return res.status(404).send({ message: "task doesn't exist" });
-      data.name = name;
-      await data.save();
-      const todo = await data.save();
-
-      if (data) {
-        return res.status(200).send({ message: "task updated", data: todo });
-      }
-    } catch (error) {
-      console.log(error);
-
-      res.status(500).send(error);
+    const data = await db.Todos.findByPk(id);
+    if (!data) return res.status(404).send({ message: "task doesn't exist" });
+    data.name = name;
+    await data.save();
+    const todo = await data.save();
+    if (data.userId !== userId) {
+      return res.status(403).send({ message: "task does not belong to you" });
     }
-  }
+    if (data) {
+      return res.status(200).send({ message: "task updated", data: todo });
+    }
+  } catch (error) {
+    console.log(error);
 
-);
+    res.status(500).send(error);
+  }
+});
 
 // create a task
-router.post("/", async (req, res) => {
+router.post("/", validateToken, async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, userId } = req.body;
+
     const schema = joi.object({
       name: joi.string().min(3).max(30).required(),
     });
@@ -100,7 +117,13 @@ router.post("/", async (req, res) => {
         .status(400)
         .send({ message: "Please fill in the name", error });
     console.log(req.body);
-    const addTodos = await db.Todos.create({ name: name });
+
+    const user = await db.User.findOne({ where: { id: userId } });
+    // if (!user) {
+    //   return res.status(404).send({ message: "user does not exist" });
+    // }
+
+    const addTodos = await db.Todos.create({ name: name, userId: user.id });
     return res.status(200).send({ message: "task created", data: addTodos });
   } catch (error) {
     console.log(error);

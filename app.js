@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 
+require("dotenv").config();
+
 
 const app = express();
 app.use(express.json());
@@ -19,7 +21,7 @@ app.all("*", (req, res) => {
 })
 
 db.sequelize
-  .sync({  })
+  .sync({ })
   .then(() => {
     app.listen(5000, () => {
       console.log("App is runnig on port http://localhost:5000");
